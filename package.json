@@ -12,5 +12,8 @@
     "axios": "^0.21.1",
     "dotenv": "^10.0.0",
     "node-telegram-bot-api": "^0.54.0"
+  },
+  "devDependencies": {
+    "prettier": "2.3.2"
   }
 }
