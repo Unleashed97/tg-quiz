@@ -230,20 +230,22 @@ const shuffleArray = (array) => {
 const quizData = []
 let questionNumber = 0
 let score = 0
-let answers = []
+let buttons = []
 let region = ''
 
-function QuizQuestion(country, capital, options) {
+function QuizQuestion(country, capital, options, isRight) {
+    this.options = options
     return {
         country: country,
         capital: capital,
         options: options,
+        isRight: isRight,
     }
 }
 
 const quizGenerator = (region) => {
     const answersGeneration = (capital) => {
-        answers.length = 0
+        let answers = []
         answers.push(capital)
         for (let i = 0; i < 3; i++) {
             let randomNumber = getRandomNumber(
@@ -264,13 +266,18 @@ const quizGenerator = (region) => {
     }
 
     shuffleArray(Object.entries(countries[region])).map(([key, value]) => {
-        quizData.push(new QuizQuestion(key, value, answersGeneration(value)))
+        quizData.push(
+            new QuizQuestion(key, value, answersGeneration(value), null),
+        )
     })
 }
 
 const quiz = (chatId, region) => {
-    quizGenerator(region)
-    if (questionNumber < Object.values(countries[region]).length) {
+    if (quizData.length === 0) {
+        quizGenerator(region)
+    }
+
+    if (questionNumber < quizData.length) {
         let keyboard = [
             [
                 quizData[questionNumber].options[0],
@@ -282,6 +289,14 @@ const quiz = (chatId, region) => {
             ],
             ['exit'],
         ]
+
+        buttons = [
+            quizData[questionNumber].options[0],
+            quizData[questionNumber].options[1],
+            quizData[questionNumber].options[2],
+            quizData[questionNumber].options[3],
+        ]
+
         let number = questionNumber
         bot.sendMessage(
             chatId,
@@ -296,8 +311,24 @@ const quiz = (chatId, region) => {
             },
         )
     } else {
-        bot.sendMessage(chatId, `score: `, menu.start.keyboard)
+        bot.sendMessage(
+            chatId,
+            `You've scored ${score} out of ${
+                Object.keys(countries[region]).length
+            }`,
+            menu.start.keyboard,
+        )
         questionNumber = 0
+        quizData.length = 0
+        score = 0
+    }
+}
+
+const getScore = (answer) => {
+    if (answer === quizData[questionNumber].capital) {
+        ;(quizData[questionNumber].isRight = true), ++score
+    } else {
+        quizData[questionNumber].isRight = false
     }
 }
 
@@ -334,10 +365,11 @@ bot.on('message', (msg) => {
             region = 'oceania'
             quiz(chat.id, region)
             break
-        case answers[0]:
-        case answers[1]:
-        case answers[2]:
-        case answers[3]:
+        case buttons[0]:
+        case buttons[1]:
+        case buttons[2]:
+        case buttons[3]:
+            getScore(text)
             ++questionNumber
             quiz(chat.id, region)
             break
@@ -345,6 +377,7 @@ bot.on('message', (msg) => {
             questionNumber = 0
             region = ''
             quizData.length = 0
+            score = 0
         case 'back':
             bot.sendMessage(chat.id, `${menu.start.title}`, menu.start.keyboard)
             break
