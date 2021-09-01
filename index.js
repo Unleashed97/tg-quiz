@@ -272,6 +272,25 @@ const quizGenerator = (region) => {
     })
 }
 
+const getScore = (chatId, text) => {
+    if (text === quizData[questionNumber].capital) {
+        quizData[questionNumber].isRight = true
+        ++score
+        bot.sendMessage(chatId, `<b>Correct!</b>`, {
+            parse_mode: 'HTML',
+        })
+    } else {
+        quizData[questionNumber].isRight = false
+        message = bot.sendMessage(
+            chatId,
+            `<b>Wrong!</b> The correct answer is <b>${quizData[questionNumber].capital}</b>`,
+            {
+                parse_mode: 'HTML',
+            },
+        )
+    }
+}
+
 const quiz = (chatId, region) => {
     if (quizData.length === 0) {
         quizGenerator(region)
@@ -324,16 +343,8 @@ const quiz = (chatId, region) => {
     }
 }
 
-const getScore = (answer) => {
-    if (answer === quizData[questionNumber].capital) {
-        ;(quizData[questionNumber].isRight = true), ++score
-    } else {
-        quizData[questionNumber].isRight = false
-    }
-}
-
 bot.on('message', (msg) => {
-    const { chat, text } = msg
+    const { chat, text, message_id } = msg
     switch (text) {
         case 'Quizzes':
             bot.sendMessage(
@@ -369,9 +380,11 @@ bot.on('message', (msg) => {
         case buttons[1]:
         case buttons[2]:
         case buttons[3]:
-            getScore(text)
+            getScore(chat.id, text)
             ++questionNumber
-            quiz(chat.id, region)
+            setTimeout(() => {
+                quiz(chat.id, region)
+            }, 100)
             break
         case 'exit':
             questionNumber = 0
