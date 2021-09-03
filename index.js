@@ -182,7 +182,11 @@ const quiz = (chatId, region) => {
             `${i18n.quiz.score} ${score}/${
                 Object.keys(i18n.countries[region]).length
             }`,
-            i18n.menu.start.keyboard,
+            {
+                reply_markup: {
+                    keyboard: i18n.menu.start.keyboard,
+                },
+            },
         )
         questionNumber = 0
         quizData.length = 0
