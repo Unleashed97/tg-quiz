@@ -248,6 +248,9 @@ bot.on('message', (msg) => {
             region = 'oceania'
             quiz(chat.id, region)
             break
+        case `${i18n.buttons.africanCapitals}`:
+            ;(region = 'africa'), quiz(chat.id, region)
+            break
         case buttons[0]:
         case buttons[1]:
         case buttons[2]:
