@@ -93,21 +93,19 @@ const quizGenerator = (region) => {
                 0,
                 Object.values(i18n.countries[region]).length,
             )
-            if (
-                Object.values(i18n.countries[region])[randomNumber] === capital
+
+            while (
+                answers.includes(
+                    Object.values(i18n.countries[region])[randomNumber],
+                )
             ) {
                 randomNumber = getRandomNumber(
                     0,
                     Object.values(i18n.countries[region]).length,
                 )
-                answers.push(
-                    Object.values(i18n.countries[region])[randomNumber],
-                )
-            } else {
-                answers.push(
-                    Object.values(i18n.countries[region])[randomNumber],
-                )
             }
+
+            answers.push(Object.values(i18n.countries[region])[randomNumber])
         }
         return shuffleArray(answers)
     }
