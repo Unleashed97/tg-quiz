@@ -1,13 +1,11 @@
 const express = require('express')
 
-const port = process.env.PORT
-
 const app = express()
 
 app.use(express.json())
 
-app.listen(port, () => {
-    console.log(`Listening on port ${port}`)
+app.listen(process.env.PORT, () => {
+    console.log(`Listening on port ${process.env.PORT}`)
 })
 
 module.exports = (bot) => {

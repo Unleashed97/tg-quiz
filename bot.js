@@ -1,9 +1,11 @@
 const TelegramBot = require('node-telegram-bot-api')
 
 const token = process.env.TOKEN
+const url = process.env.URL
 
 const bot = new TelegramBot(token)
-bot.setWebHook(`${process.env.URL}/bot${token}`)
+
+bot.setWebHook(`${url}/bot${token}`)
 
 const en = require('./locales/en.json')
 const ru = require('./locales/ru.json')
