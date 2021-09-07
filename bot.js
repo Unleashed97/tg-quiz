@@ -3,9 +3,14 @@ const TelegramBot = require('node-telegram-bot-api')
 const token = process.env.TOKEN
 const url = process.env.URL
 
-const bot = new TelegramBot(token)
+let bot
 
-bot.setWebHook(`${url}/bot${token}`)
+if (process.env.NODE_ENV === 'production') {
+    bot = new TelegramBot(token)
+    bot.setWebHook(`${url}/bot${token}`)
+} else {
+    bot = new TelegramBot(token, { polling: true })
+}
 
 const en = require('./locales/en.json')
 const ru = require('./locales/ru.json')
@@ -279,6 +284,6 @@ bot.on('message', (msg) => {
     }
 })
 
-bot.on('webHook_error', console.log)
+bot.on('polling_error', console.log)
 
 module.exports = bot
