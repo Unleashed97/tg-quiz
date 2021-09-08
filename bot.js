@@ -1,5 +1,3 @@
-process.env.NTBA_FIX_319 = 1
-
 const TelegramBot = require('node-telegram-bot-api')
 
 const token = process.env.TOKEN
@@ -9,7 +7,7 @@ let bot
 
 if (process.env.NODE_ENV === 'production') {
     bot = new TelegramBot(token)
-    bot.setWebHook(`${url}/bot${token}`)
+    bot.setWebHook(url + token)
 } else {
     bot = new TelegramBot(token, { polling: true })
 }

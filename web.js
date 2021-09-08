@@ -9,7 +9,7 @@ app.listen(process.env.PORT, () => {
 })
 
 module.exports = (bot) => {
-    app.post(`/bot${bot.token}`, (req, res) => {
+    app.post(`/${bot.token}`, (req, res) => {
         bot.processUpdate(req.body)
         res.sendStatus(200)
     })
