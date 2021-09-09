@@ -28,6 +28,41 @@ bot.setMyCommands([
     { command: 'language', description: `${i18n.command.languge}` },
 ])
 
+const { dbConnect } = require('./database/db')
+dbConnect()
+
+const User = require('./database/models/User')
+const Quiz = require('./database/models/Quiz')
+
+function checkUser(msg) {
+    const {
+        from: { id, first_name, last_name, username, language_code },
+        text,
+        date,
+    } = msg
+
+    User.exists({ telegramId: id })
+        .then((result) => {
+            if (result) {
+                console.log('This user already exists')
+            } else {
+                const user = new User({
+                    telegramId: id,
+                    firstName: first_name,
+                    lastName: last_name,
+                    username: username,
+                    languageCode: language_code,
+                })
+
+                user.save()
+                console.log('User added')
+            }
+        })
+        .catch((error) => {
+            console.log(error)
+        })
+}
+
 bot.onText(new RegExp(`/(.*)`), (msg, [source, match]) => {
     const { chat, text } = msg
     if (msg.from.language_code === 'en') {
@@ -38,6 +73,7 @@ bot.onText(new RegExp(`/(.*)`), (msg, [source, match]) => {
 
     switch (match) {
         case COMMAND_START:
+            checkUser(msg)
             bot.sendMessage(chat.id, `${i18n.menu.start.title}`, {
                 reply_markup: {
                     keyboard: i18n.menu.start.keyboard,
