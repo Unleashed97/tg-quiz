@@ -1,5 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api')
 
+const { v4: uuidv4 } = require('uuid')
+
 const token = process.env.TOKEN
 const url = process.env.URL
 
@@ -28,43 +30,24 @@ bot.setMyCommands([
     { command: 'language', description: `${i18n.command.languge}` },
 ])
 
-const { dbConnect } = require('./database/db')
-dbConnect()
+const {
+    connection,
+    addUser,
+    addQuiz,
+    updateScore,
+    addQuestion,
+    updateQuestion,
+} = require('./database/db')
 
-const User = require('./database/models/User')
-const Quiz = require('./database/models/Quiz')
-
-function checkUser(msg) {
-    const {
-        from: { id, first_name, last_name, username, language_code },
-        text,
-        date,
-    } = msg
-
-    User.exists({ telegramId: id })
-        .then((result) => {
-            if (result) {
-                console.log('This user already exists')
-            } else {
-                const user = new User({
-                    telegramId: id,
-                    firstName: first_name,
-                    lastName: last_name,
-                    username: username,
-                    languageCode: language_code,
-                })
-
-                user.save()
-                console.log('User added')
-            }
-        })
-        .catch((error) => {
-            console.log(error)
-        })
-}
+connection()
 
 bot.onText(new RegExp(`/(.*)`), (msg, [source, match]) => {
-    const { chat, text } = msg
+    const {
+        from: { id, first_name, last_name, username, language_code },
+        chat,
+        text,
+    } = msg
+
     if (msg.from.language_code === 'en') {
         i18n = en
     } else if (msg.from.language_code === 'ru') {
@@ -73,7 +56,8 @@ bot.onText(new RegExp(`/(.*)`), (msg, [source, match]) => {
 
     switch (match) {
         case COMMAND_START:
-            checkUser(msg)
+            addUser(id, first_name, last_name, username, language_code)
+
             bot.sendMessage(chat.id, `${i18n.menu.start.title}`, {
                 reply_markup: {
                     keyboard: i18n.menu.start.keyboard,
@@ -118,8 +102,20 @@ let score = 0
 let buttons = []
 let region = ''
 
+let quizId = null
+let questionId = null
+
+const getQuizId = () => {
+    quizId = uuidv4()
+    return quizId
+}
+
+const getQuestionId = () => {
+    questionId = uuidv4()
+    return questionId
+}
+
 function QuizQuestion(country, capital, options, isRight) {
-    this.options = options
     return {
         country: country,
         capital: capital,
@@ -178,6 +174,8 @@ const getScore = (chatId, text) => {
             },
         )
     }
+    updateQuestion(questionId, text, quizData[questionNumber].isRight)
+    updateScore(quizId, `${score}/${Object.keys(quizData).length}`)
 }
 
 const quiz = (chatId, region) => {
@@ -205,12 +203,19 @@ const quiz = (chatId, region) => {
             quizData[questionNumber].options[3],
         ]
 
-        let number = questionNumber
+        addQuestion(
+            quizId,
+            getQuestionId(),
+            `${i18n.quiz.question} ${quizData[questionNumber].country}`,
+            quizData[questionNumber].capital,
+            quizData[questionNumber].options,
+        )
+
         bot.sendMessage(
             chatId,
-            `<b>${++number}</b>/${Object.keys(i18n.countries[region]).length} ${
-                i18n.quiz.question
-            } ${quizData[questionNumber].country}`,
+            `<b>${questionNumber + 1}</b>/${
+                Object.keys(i18n.countries[region]).length
+            } ${i18n.quiz.question} ${quizData[questionNumber].country}`,
             {
                 reply_markup: {
                     keyboard: keyboard,
@@ -237,7 +242,12 @@ const quiz = (chatId, region) => {
 }
 
 bot.on('message', (msg) => {
-    const { chat, text, message_id } = msg
+    const {
+        chat,
+        text,
+        message_id,
+        from: { id },
+    } = msg
     switch (text) {
         case `${i18n.buttons.quizzes}`:
             bot.sendMessage(chat.id, `${i18n.menu.start.quizzes.title}`, {
@@ -278,22 +288,24 @@ bot.on('message', (msg) => {
             break
         case `${i18n.buttons.europeCapitals}`:
             region = 'europe'
-            quiz(chat.id, region)
+            // createQuiz(region, id)
+            addQuiz(id, getQuizId(), region).then(() => quiz(chat.id, region))
             break
         case `${i18n.buttons.asianCapitals}`:
             region = 'asia'
-            quiz(chat.id, region)
+            addQuiz(id, getQuizId(), region).then(() => quiz(chat.id, region))
             break
         case `${i18n.buttons.americanCapitals}`:
             region = 'america'
-            quiz(chat.id, region)
+            addQuiz(id, getQuizId(), region).then(() => quiz(chat.id, region))
             break
         case `${i18n.buttons.oceaniaCapitals}`:
             region = 'oceania'
-            quiz(chat.id, region)
+            addQuiz(id, getQuizId(), region).then(() => quiz(chat.id, region))
             break
         case `${i18n.buttons.africanCapitals}`:
-            ;(region = 'africa'), quiz(chat.id, region)
+            region = 'africa'
+            addQuiz(id, getQuizId(), region).then(() => quiz(chat.id, region))
             break
         case buttons[0]:
         case buttons[1]:

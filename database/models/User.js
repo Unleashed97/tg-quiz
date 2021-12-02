@@ -7,13 +7,7 @@ const UserSchema = new mongoose.Schema({
     lastName: { type: String, default: '' },
     username: { type: String, required: true },
     languageCode: String,
-    dateOfStartBot: { type: Date, default: Date.now },
-    messages: [
-        {
-            messageText: String,
-            messageDate: Date,
-        },
-    ],
+    startedAt: { type: Date, immutable: true, default: () => Date.now() },
 })
 
 let User = mongoose.model('User', UserSchema)

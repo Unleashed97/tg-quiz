@@ -1,19 +1,13 @@
 const mongoose = require('mongoose')
 
 const QuizSchema = new mongoose.Schema({
-    category: String,
-    questions: [
-        {
-            title: { type: String, required: true },
-            correctAnswer: { type: String, required: true },
-            userAnswer: { type: String, default: '' },
-            isCorrect: Boolean,
-        },
-    ],
+    id: { type: String, unique: true, required: true },
+    region: String,
     hardMode: { type: Boolean, default: false },
-    score: String,
-    isCompleted: Boolean,
+    score: { type: String, default: '0/0' },
+    isCompleted: { type: Boolean, default: false },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: () => Date.now() },
 })
 
 const Quiz = mongoose.model('Quiz', QuizSchema)
